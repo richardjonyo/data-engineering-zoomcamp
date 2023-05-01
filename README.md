@@ -1,4 +1,4 @@
-# Data Engineering Zoomcamp Final Project (Feb - May 2023)
+# Data Engineering Zoomcamp Final Project (2023)
 
 ## Overview
 This data pipeline project intends to use the U.S. Energy Information Administration (EIA)'s weekly and monthly original estimates of state level coal production to generate more accurate estimates using quarterly mine level coal production data from the Mine Safety and Health Administration (MSHA). The estimates are guaranteed to conform with the MSHA survey data and include refuse coal. The project will focus on using the weekly and monthly coal production datasets, which are publicly available in XLS format on the EIA website. The datasets are part of the Weekly Coal Production dataset, which contains information on world energy statistics and is comprised of 22 CSV files.
@@ -29,6 +29,11 @@ The goals of the project include:
 * Orchestrate the pipeline using an orchestration tool.</li>
 * Generate a report summarizing some of the findings.</li>
 
+This project has the goal of answering the following questions:
+
+1. What is the average yearly tonange of coal produced in US since 2001?
+2. Whichis the highest coal producing state and region?
+
 ## Technologies used
 * Google Cloud Platform (GCP): Cloud-based auto-scaling platform by Google
 * Google Cloud Storage (GCS): Data Lake
@@ -43,17 +48,30 @@ The goals of the project include:
 
 ## Data Pipeline Architecture
 * The pipeline created for this project was for batch processing which runs periodically on a daily basis. The image below represents the architecture used in this project.
-<p align="center">
-  <img width="100%" src="images/architecture.JPG"/>
-</p>
+![image](./images/architecture.JPG)
+
+### How the data pipeline works
+
+* Prefect dataflows:
+
+    1. [ETL Web to GCS](./flows/etl_web_to_gcs.py): fetches xls files from the EIA website, extracts and transforms the data, and finally loads them into GCS bucket as csv files.
+
+    2. [ETL GCS to BigQuery](./flows/etl_gcs_to_bq.py): fetches data from GCS, transforms the data by adding a **year** column, and loads the data into BigQuery (Load) on the tables **eia_week** and **eia_month**.
+
+* Dbt models:
+
+    1. [stg_eiadata](./tranformers/models/staging/stg_eiadata.sql): selects a subset of columns from the raw table that was loaded into BigQuery, filtering only records that happened after January 1st, 2013.
+
+    2. [production_states](./tranformers/models/core/production_states.sql): selects all data from stg_eiadata, partitions it by year and clusters the records by borough and contributing_factor_vehicle_1. Here, the partitioning makes it more efficient to query data and extract statistics by year. With respect to clustering, borough and contributing_factor_vehicle_1 are the main categorical values whose distributions I was interested in seeing when building my dashboard.
 
 ## Partitioning and Clustering:
 
 - Partitioning was by column **year** to make it easier to manage and query the data. By dividing the table into smaller partitions, we can improve query performance and control costs by reducing the number of bytes read by a query.
 - Clustering was not employed on this table since we have very few states and hence no query performance advantage. If we had numerous states then the table would be clustered by the column **state** to group data that have the same state value.
 
-![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/partition-code.JPG)
-![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/partitioned-table.JPG)
+![image](./images/partition-code.JPG)
+![image](./images/partitioned-table.JPG)
+
 
 ## Dashboard
 
@@ -145,4 +163,15 @@ terraform apply
    **Note**: The transformations made were the selection of certain columns and creation of new ones (time differences, Month, Year). It is known that tables with less than 1 GB don't show significant improvement with partitioning and clustering; doing so in a small table could even lead to increased cost due to the additional metadata reads and maintenance needed for these features (or) the processing data clustered and with out clustered is same for small data
 
 As of 20-Mar-2023, the dataset has a size of ~ 260 MB, thus I only performed transformations such as adding new variables, and not partitioning and clustering.
+
+## Dashboard
+
+Analytics was done using looker studios which pulls data from Big Querys. Link to the dashboard: 
+
+A preview of the dashboard can also be seen below:
+
+## Good to have in the future
+
+    Data freshness would be a consideration in the production environment with data coming in daily.
+    Prefect and dbt job scheduling would also be a consideration in production.
 
