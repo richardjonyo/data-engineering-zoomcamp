@@ -48,10 +48,12 @@ The goals of the project include:
 </p>
 
 ## Partitioning and Clustering:
-![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/partitioned-table.JPG)
 
 - Partitioning was by column **year** to make it easier to manage and query the data. By dividing the table into smaller partitions, we can improve query performance and control costs by reducing the number of bytes read by a query.
 - Clustering was not employed on this table since we have very few states and hence no query performance advantage. If we had numerous states then the table would be clustered by the column **state** to group data that have the same state value.
+
+![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/partition-code.JPG)
+![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/partitioned-table.JPG)
 
 ## Dashboard
 
