@@ -22,13 +22,12 @@ Dataset Url: https://www.eia.gov/coal/production/weekly/includes/archive.php
 
 
 ## Problem statement
-The project involved the following: 
-
-* Selecting a dataset that one is interested in
-* Creating a pipeline for processing the dataset and placing it to a datalake (Google Cloud Storage)
-* Creating a pipeline for moving the data from the lake to a data warehouse (Google BigQuery)
-* Transforming the data in the data warehouse (DBT and prepare it for the dashboard 
-* Creating a dashboard (Google Data Studio)
+The goals of the project include:
+* Collect coal production data from the Mine Safety and Health Administration (Extract)
+* Process the data to generate derived quantities for further analysis (Transform).</li>
+* Save the transformed data in Big Query (Load).</li>
+* Orchestrate the pipeline using an orchestration tool.</li>
+* Generate a report summarizing some of the findings.</li>
 
 ## Technologies used
 * Google Cloud Platform (GCP): Cloud-based auto-scaling platform by Google
@@ -49,25 +48,30 @@ The project involved the following:
 </p>
 
 ## Partitioning and Clustering:
-![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/architecture.JPG)
+![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/partitioned-table.JPG)
 
-- Partition by column **start_date**, more specifically by **year** to obtain annual granularity
-- Clustering by column **country** to group data that have the same country value
+- Partitioning was by column **year** to make it easier to manage and query the data. By dividing the table into smaller partitions, we can improve query performance and control costs by reducing the number of bytes read by a query.
+- Clustering was not employed on this table since we have very few states and hence no query performance advantage. If we had numerous states then the table would be clustered by the column **state** to group data that have the same state value.
 
 ## Dashboard
 
 The final product for this pipeline was a dashboard built on Google Data Studio. The dashboard contains a graph that shows the distribution of some categorical data and the distribution of the data across a temporal line.
 
 ## Peer review
-* The project involved peer review of three projects by evauationg agains a set evaluation criteria.
+* The project involved peer review of three projects by evauationg against a set evaluation criteria.
 
 ## Steps for Project Reproduction
 Clone this repo.
 
+For reproducibility, have Docker, Python (at least 3.9), git and Terraform installed.
+
+Other tools and accounts required include a Google Cloud account, Prefect Cloud free account, and DBT developer account.
+
+
 ### Step 1
 Go to your [Google Cloud Platform (GCP)](https://cloud.google.com/) account.
 
-### Step 2: Setup of Google Cloud Platform (GCP)
+### Step 2: Setup of a GCP Project
 - Create a new GCP project. Take note of the Project ID. 
 - Go to `IAM & Admin > Service accounts > Create service account`, provide a service account name and grant the roles `Viewer`, `BigQuery Admin`, `Storage Admin`, `Storage Object Admin`. 
 - Download service account key locally, rename it to `google_credentials.json`. 
@@ -78,7 +82,7 @@ Go to your [Google Cloud Platform (GCP)](https://cloud.google.com/) account.
    * https://console.cloud.google.com/apis/library/iam.googleapis.com
    * https://console.cloud.google.com/apis/library/iamcredentials.googleapis.com
 
-### Step 3: Creation of a GCP Infrastructure
+### Step 3: Creation of GCP Infrastructure using Terraform
 - [Install Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 - Change default variables `project`, `region`, `BQ_DATASET` in `variables.tf` (the file contains descriptions explaining these variables)
 - Run the following commands from terraform directory on bash:
@@ -98,25 +102,20 @@ terraform apply
 
 #### Execution
 
-**1.** Create a new Conda environment and install packages listed in  `prefect_ingest_data/requirements.txt` . 
-```
-conda create -n <env_name> python=3.9
-conda activate <env_name>
-pip install -r prefect_ingest_data/requirements.txt
-```
+**1.** Create a Prefect Cloud accout and login. More information about Prefect Cloud is [here:] 
+(https://docs.prefect.io/latest/cloud/cloud-quickstart/)
+
 **2.** Register Prefect blocks and start Orion
 
-```
-prefect block register-m prefect_gcp
-prefect orion start
-```
-* Navigate to prefect dashboard `http://127.0.0.1:4200` --> go to blocks menu --> add `GCS Bucket` and provide below inputs.
+**3.** Run the command "prefect cloud login" to login into Prefect cloud. 
+
+**4.** From Prefect dashboard navigate to blocks menu --> add `GCS Bucket` and provide below inputs.
 	* Block name : `<your-GCS-bucket-block-name>`
 	* Bucket name: `<your-bucket-name-created-by-terraform>`
 	* GCP credentials:  Click on Add --> It opens up create block of GCP credentials , provide input below.
 		* Block name : `<your-GCP-credentials-block-name>`
 		* Service Account info: copy paste the json file data in the service account info.
-		* Clicck on create.
+		* Click on create.
 	* GCP credentials:  Click on Add --> Select the above created `<your-GCP-credentials-block-name>`
 	* Code generated needs to be replaced in the `web-to-gcs-parent.py` and `gcs_to_bq_parent`python files.
 		```
@@ -127,18 +126,7 @@ prefect orion start
 		gcp_credentials_block = GcpCredentials.load("<your-gcs-cred-block-name>")
 
 		```    
-**3.**  Change the directory to prefect_ingest_data and run below command to deploy code in prefect 
-```
-prefect deployment build ./ingest_data_to_bucket.py:ingest_data_to_bucket -n "Ingest data from web to gcs bucket" --cron "0 0 1 * *" -a
-
-prefect deployement build ./ingest_data_to_bq.py:ingest_data_to_bq -n "Ingest data from gcs bucket to bigquery" --cron "0 1 1 * *" -a
-```
-**4.** Navigate to prefect deployment dashboard and check for the recently created deployments. 
-[Image](https://github.com/shivanipadal/Fire_Incident_DE/blob/main/images/deploy_code.png)
-
 **5.** Run deployments from prefect dashboard
-
-The above deployments download csv data from web portal  and stores it into GCS bucket as .parquet file and then writes data into Google BigQuery.
 
 ### Step 5: Transformations using dbt.
 
@@ -151,7 +139,6 @@ The above deployments download csv data from web portal  and stores it into GCS 
 	dbt deps
 	dbt build
 	``` 
-	[Image](https://github.com/shivanipadal/Fire_Incident_DE/blob/main/images/dbt.png)
 * The above will create dbt models and final tables
    **Note**: The transformations made were the selection of certain columns and creation of new ones (time differences, Month, Year). It is known that tables with less than 1 GB don't show significant improvement with partitioning and clustering; doing so in a small table could even lead to increased cost due to the additional metadata reads and maintenance needed for these features (or) the processing data clustered and with out clustered is same for small data
 
