@@ -1,23 +1,24 @@
 # Data Engineering Zoomcamp Final Project (Feb - May 2023)
 
 ## Overview
-This data pipeline project intends to use the U.S. Energy Information Administration (EIA)'s weekly and monthly original estimates of state level coal production to generate more accurate estimates using quarterly mine level coal production data from the Mine Safety and Health Administration (MSHA). The estimates are guaranteed to conform with the MSHA survey data and include refuse coal. The project will focus on using the weekly and monthly coal production datasets, which are publicly available in XLS format on the EIA website. The datasets are part of the Weekly Coal Production dataset, which contains information on world energy statistics and is comprised of 11 CSV files.
+This data pipeline project intends to use the U.S. Energy Information Administration (EIA)'s weekly and monthly original estimates of state level coal production to generate more accurate estimates using quarterly mine level coal production data from the Mine Safety and Health Administration (MSHA). The estimates are guaranteed to conform with the MSHA survey data and include refuse coal. The project will focus on using the weekly and monthly coal production datasets, which are publicly available in XLS format on the EIA website. The datasets are part of the Weekly Coal Production dataset, which contains information on world energy statistics and is comprised of 22 CSV files.
 
-This data pipeline transforms raw data into data ready for analytics, applications, machine learning and AI systems. The intention is to keep data flowing to solve problems, inform decisions, and, make our lives more convenient. The goal of this project is to apply everything I have learned in the Data Engineering Zoomcamp course and build an end-to-end data pipeline.
+This data pipeline transforms raw data into data ready for analytics with the intention of keeping data flowing to provide insights that lead to informed decisions. The goal of this project is to apply everything I have learned in the Data Engineering Zoomcamp course and build an end-to-end data pipeline.
 
 ## Datasets
-The dataset has 54 columns - of which 53 are values for each week of year. The following columns will be used:
+The dataset has 54 columns - of which 53 are values for each week of year represented as "week 01", "week 02" etc . The following columns will be used:
 
 <div align="center">
   
 | #  | Attribute             |                     Description                                      |
 |:--:|:---------------------:|----------------------------------------------------------------------|
-|  1 | **state**                | US state that produces coal.                  |
-|  2 | **week 1 - week 12**          | Week of the year and | 
+|  1 | **state**                | A US state that produces coal.                  |
+|  2 | **week 1 - week 12**          | Week of the year | 
+|  3 | **year**          | Captures the year when the coal production data estimate | 
   
 </div>
 
-Url: https://www.eia.gov/coal/production/weekly/includes/archive.php
+Dataset Url: https://www.eia.gov/coal/production/weekly/includes/archive.php
 
 
 ## Problem statement
@@ -44,11 +45,11 @@ The project involved the following:
 ## Data Pipeline Architecture
 * The pipeline created for this project was for batch processing which runs periodically on a daily basis. The image below represents the architecture used in this project.
 <p align="center">
-  <img width="100%" src="images/architecture.jpg"/>
+  <img width="100%" src="images/architecture.JPG"/>
 </p>
 
 ## Partitioning and Clustering:
-![image](https://user-images.githubusercontent.com/69354054/231012117-8d3dc96a-9e35-4443-84a6-e05cd30cbf29.png)
+![image](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/images/architecture.JPG)
 
 - Partition by column **start_date**, more specifically by **year** to obtain annual granularity
 - Clustering by column **country** to group data that have the same country value
@@ -59,3 +60,100 @@ The final product for this pipeline was a dashboard built on Google Data Studio.
 
 ## Peer review
 * The project involved peer review of three projects by evauationg agains a set evaluation criteria.
+
+## Steps for Project Reproduction
+Clone this repo.
+
+### Step 1
+Go to your [Google Cloud Platform (GCP)](https://cloud.google.com/) account.
+
+### Step 2: Setup of Google Cloud Platform (GCP)
+- Create a new GCP project. Take note of the Project ID. 
+- Go to `IAM & Admin > Service accounts > Create service account`, provide a service account name and grant the roles `Viewer`, `BigQuery Admin`, `Storage Admin`, `Storage Object Admin`. 
+- Download service account key locally, rename it to `google_credentials.json`. 
+- Store it in your home folder for easier access. 
+- Set and export the GOOGLE_APPLICATION_CREDENTIALS using `export GOOGLE_APPLICATION_CREDENTIALS=<path/to/your/service-account-authkeys>.json`
+- Activate the service account using `gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS`
+- Activate the following API's:
+   * https://console.cloud.google.com/apis/library/iam.googleapis.com
+   * https://console.cloud.google.com/apis/library/iamcredentials.googleapis.com
+
+### Step 3: Creation of a GCP Infrastructure
+- [Install Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+- Change default variables `project`, `region`, `BQ_DATASET` in `variables.tf` (the file contains descriptions explaining these variables)
+- Run the following commands from terraform directory on bash:
+```shell
+# Initialize state file (.tfstate)
+terraform init
+
+# Check changes to new infra plan
+terraform plan
+
+# Create new infra
+terraform apply
+```
+- Confirm in GCP console that the infrastructure was correctly created.
+
+### Step 4: Creation of Conda environment and Orchestration using prefect flows.
+
+#### Execution
+
+**1.** Create a new Conda environment and install packages listed in  `prefect_ingest_data/requirements.txt` . 
+```
+conda create -n <env_name> python=3.9
+conda activate <env_name>
+pip install -r prefect_ingest_data/requirements.txt
+```
+**2.** Register Prefect blocks and start Orion
+
+```
+prefect block register-m prefect_gcp
+prefect orion start
+```
+* Navigate to prefect dashboard `http://127.0.0.1:4200` --> go to blocks menu --> add `GCS Bucket` and provide below inputs.
+	* Block name : `<your-GCS-bucket-block-name>`
+	* Bucket name: `<your-bucket-name-created-by-terraform>`
+	* GCP credentials:  Click on Add --> It opens up create block of GCP credentials , provide input below.
+		* Block name : `<your-GCP-credentials-block-name>`
+		* Service Account info: copy paste the json file data in the service account info.
+		* Clicck on create.
+	* GCP credentials:  Click on Add --> Select the above created `<your-GCP-credentials-block-name>`
+	* Code generated needs to be replaced in the `web-to-gcs-parent.py` and `gcs_to_bq_parent`python files.
+		```
+		from prefect_gcp.cloud_storage import GcsBucket
+		gcp_cloud_storage_bucket_block = GcsBucket.load("<your-gcp-bucket-block-name")
+
+		from prefect_gcp import GcpCredentials
+		gcp_credentials_block = GcpCredentials.load("<your-gcs-cred-block-name>")
+
+		```    
+**3.**  Change the directory to prefect_ingest_data and run below command to deploy code in prefect 
+```
+prefect deployment build ./ingest_data_to_bucket.py:ingest_data_to_bucket -n "Ingest data from web to gcs bucket" --cron "0 0 1 * *" -a
+
+prefect deployement build ./ingest_data_to_bq.py:ingest_data_to_bq -n "Ingest data from gcs bucket to bigquery" --cron "0 1 1 * *" -a
+```
+**4.** Navigate to prefect deployment dashboard and check for the recently created deployments. 
+[Image](https://github.com/shivanipadal/Fire_Incident_DE/blob/main/images/deploy_code.png)
+
+**5.** Run deployments from prefect dashboard
+
+The above deployments download csv data from web portal  and stores it into GCS bucket as .parquet file and then writes data into Google BigQuery.
+
+### Step 5: Transformations using dbt.
+
+* Navigate to [dbt cloud](https://www.getdbt.com/) and create a new project by referring to this repository. Under the project subfolder update `/dbt`
+* Select the BigQuery connection and update `service-account.json` file for the authentication. 
+* Under dbt development menu, edit the `dbt-project.yml` to update the `name` and `models`.
+* add [macros/extract_month_with_name.sql](https://github.com/shivanipadal/DE_projects/tree/main/Project2/dbt/macros),   [models/core/schema.yml](https://github.com/shivanipadal/Fire_Incident_DE/blob/main/dbt/models/core/schema.yml), [models/core/stg_fire_accident.sql](https://github.com/shivanipadal/Fire_Incident_DE/blob/main/dbt/models/core/stg_fire_accident.sql), [packages.yml](https://github.com/shivanipadal/Fire_Incident_DE/blob/main/dbt/packages.yml)
+* Run below commands to execute the transformations:
+	```
+	dbt deps
+	dbt build
+	``` 
+	[Image](https://github.com/shivanipadal/Fire_Incident_DE/blob/main/images/dbt.png)
+* The above will create dbt models and final tables
+   **Note**: The transformations made were the selection of certain columns and creation of new ones (time differences, Month, Year). It is known that tables with less than 1 GB don't show significant improvement with partitioning and clustering; doing so in a small table could even lead to increased cost due to the additional metadata reads and maintenance needed for these features (or) the processing data clustered and with out clustered is same for small data
+
+As of 20-Mar-2023, the dataset has a size of ~ 260 MB, thus I only performed transformations such as adding new variables, and not partitioning and clustering.
+
