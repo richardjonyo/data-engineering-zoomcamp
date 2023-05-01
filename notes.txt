@@ -1,0 +1,5 @@
+Installations
+pip install xlrd
+pip install fastparquet
+pip install pyarrow
+pip install openpyxl
