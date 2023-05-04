@@ -13,7 +13,7 @@ The dataset has 54 columns - of which 53 are values for each week of year repres
 | #  | Attribute             |                     Description                                      |
 |:--:|:---------------------:|----------------------------------------------------------------------|
 |  1 | **state**                | A US state that produces coal.                  |
-|  2 | **week 1 - week 12**          | Week of the year | 
+|  2 | **week 1 - week 53**          | Week of the year | 
 |  3 | **year**          | Captures the year when the coal production data estimate | 
   
 </div>
@@ -54,34 +54,56 @@ This project has the goal of answering the following questions among others:
 
 * Prefect dataflows:
 
-    1. [ETL Web to GCS](./prefect/etl_web_to_gcs.py): fetches xls files from the EIA website, extracts and transforms the data, and finally loads them into GCS bucket as csv files. It creates a three new fields to the dataframe (*'year'*, *'annual_average'*, and *'annual_total'*). This ETL will run once to extract the historical coal production data (2001 to 2023). Consequently it will only be pulling data for the current year.
+    1. [ETL Web to GCS](./prefect/etl_web_to_gcs.py): fetches xls files from the EIA website, extracts and transforms the data, and finally loads them into GCS bucket as csv files. It creates a three new fields to the dataframe (*'year'*, *'annual_average'*, and *'annual_total'*). The ETL process will execute once to obtain coal production data from the past (2001, 2021, 2022, up to 2022). Thereafter, it will retrieve data solely for the present year.
 
-    2. [ETL GCS to BigQuery](./prefect/etl_gcs_to_bq.py): fetches data from GCS, transforms the data by adding a 'year' column, and loads the data into BigQuery on the tables *'eia_week'* and *'eia_month'*. This ETL will run once to extract the historical coal production data (2001, 2021, 2022, till 2022). Consequently it will only be pulling data for the current year.
+    2. [ETL GCS to BigQuery](./prefect/etl_gcs_to_bq.py): fetches data from GCS, transforms the data by adding a 'year' column, and loads the data into BigQuery on the tables *'eia_week'* and *'eia_month'*. The ETL process will execute once to obtain coal production data from the past (2001, 2021, 2022, up to 2022). Thereafter, it will retrieve data solely for the present year.
 
 * Dbt models:
 
     1. [stg_eiadata](./dbt/stg_eiadata.sql): selects a all columns from the  staging table (stg_eiadata) that was loaded into BigQuery, and adds a unique key field. This file is under the staging folder.
 
-    2. [production_states](./dbt/production_states.sql): selects all state data from stg_eiadata, partitions it by year . Here, the partitioning makes it more efficient to query data and extract statistics by year. With respect to clustering, borough and state is the main categorical value but for this project we did not cluster the table a sit added no permormance benefit. This file is under the core folder.
-		* The model employs a macro named [*'get_state_category'*](./dbt/get_state_category.sql) to distinguish the states from the regions
+    2. [production_states](./dbt/production_states.sql): selects all state data from stg_eiadata, partitions it by year . Here, the partitioning makes it more efficient to query data and extract statistics by year. With respect to clustering, borough and state is the main categorical value but for this project we did not cluster the table a sit added no permormance benefit. This file is under the core folder. The model employs a macro named [*'get_state_category'*](./dbt/get_state_category.sql) to distinguish the states from the regions.
 	
-	3. [production_regions](./dbt/production_regions.sql): selects all regional data from stg_eiadata, partitions it by year . The tables is also partitioned by year and not clustered. This file is under the core folder.
-		* The model employs a macro named [*'get_state_category'*](./dbt/get_state_category.sql) as above.
+	3. [production_regions](./dbt/production_regions.sql): selects all regional data from stg_eiadata, partitions it by year . The tables is also partitioned by year and not clustered. This file is under the core folder.  The model employs a macro named [*'get_state_category'*](./dbt/get_state_category.sql) as above.
 
 ## Partitioning and Clustering:
 
 - Partitioning was by column *'year'* to make it easier to manage and query the data. By dividing the table into smaller partitions, we can improve query performance and control costs by reducing the number of bytes read by a query. 
-- Clustering was not employed on this table since we have very few states and hence no query performance advantage. If we had numerous states then the table would be clustered by the column *'state'* to group data that have the same state value.
+- Clustering was not employed on this table since we have very few states and hence no query performance advantage.
 - **Note:** It is important to note that tables with less than 1 GB don't show significant improvement with partitioning and clustering; doing so in a small table could even lead to increased cost due to the additional metadata reads and maintenance needed for these features (or) the processing data clustered and with out clustered is same for small data.
 
 ![image](./images/partitioned-table.JPG)
 
+The final main table (eia_week) is of the format below after transformation:
+<div align="center">
+  
+| #  | Attribute             |                     Description                                      |
+|:--:|:---------------------:|----------------------------------------------------------------------|
+|  1 | **eia_id**                | A unique id that identies the record.                  |
+|  2 | **state**                | A US state or region that produces coal.                  |
+|  3 | **week 1 - week 53**          | Amount of coal produced in the week of the year | 
+|  4 | **year**          | The year of the coal production | 
+|  5 | **annual_average**          | Annual average tons of coal production | 
+|  6 | **annual_total**          | Total average tons of coal production | 
+  
+The other two final tables (production_states and production_regions) are of the format below:
+  
+| #  | Attribute             |                     Description                                      |
+|:--:|:---------------------:|----------------------------------------------------------------------|
+|  1 | **state**                | A US state or region that produces coal.                  |
+|  3 | **year**          | The year of the coal production | 
+|  4 | **annual_average**          | Annual average tons of coal production | 
+|  5 | **annual_total**          | Total average tons of coal production | 
+|  6 | **state_category**          | Category of state / region | 
+
+</div>
+
 ## Steps for Project Reproduction
 - Clone this repo.
 
-- For reproducibility, have Docker, Python (at least 3.9), Git and Terraform installed.
+- For reproducibility, have Docker (optional), Python (at least 3.9), Git and Terraform installed.
 
-- Other tools and accounts required include a Google Cloud account, Prefect Cloud free account, and DBT developer account.
+- Other tools and accounts required include a Google Cloud account, Prefect Cloud free account, and DBT Cloud developer account.
 
 
 ### Step 1:  Login to your Google Cloud Platform (GCP) account
@@ -150,12 +172,12 @@ terraform apply
     python prefect/docker_deploy_to_bq.py
    ```
    - Alternatively, from Prefect dashboard, go to Deployment and a start a quick run
-   - The flows *'docker-eia-pcs-flow', docker-eia-spark-flow, and docker-eia-bq-flow* will be created.  Edit and schedule them to run once every week.For parameter 'year' enter an array of years (2001 - 2023), for the parameter 'period' enter either 'week' or 'month'. 
+   - The flows *'docker-eia-pcs-flow', docker-eia-spark-flow, and docker-eia-bq-flow* will be created.  Edit and schedule them to run once every week. For the parameter 'year' enter an array of years [2001, 2002, 2003 till 2023), for the parameter 'period' enter either 'week' or 'month'. Currently only week is applicable.
 
 ### Step 5: Batch processing and transformations using Spark
 
 * Read more on [how to install Spark](https://spark.apache.org/docs/latest/api/python/getting_started/install.html)
-* We use Spark to create a schema that is used to generate parque files from csv files located on GCS and we save the parque files on the GCS. This ensures that all data that will go into our data warehouse will conform to the schema specified. This batch processing is orchestrated by a Prefect flow.
+* We use Spark to create a schema that is used to generate parquet files from csv files located on GCS and we save the final parquet files on the GCS. The schema ensures that all data that will go into our data warehouse will conform to the schema specified. This batch processing is orchestrated by a Prefect flow mentioned earlier.
 
 ### Step 6: Transformations using dbt
 
