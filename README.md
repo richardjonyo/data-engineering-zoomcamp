@@ -163,12 +163,12 @@ terraform apply
 * Select the BigQuery connection and update `service-account.json` file for the authentication. 
 * Under dbt development menu, edit the `dbt-project.yml` to update the `name` and `models`.
 * Add the following:
-	* [macros/get_state_category.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/get_state_category.sql) 
-	* [models/core/schema.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/schema.yml)
-	* [models/staging/stg_eiadata.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/stg_eiadata.sql)
-	* [models/core/production_states.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/production_states.sql)
-	* [models/core/production_regions.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/production_regions.sql)
-	* [packages.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/packages.yml)
+	* [macros/get_state_category.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/get_state_category.sql) 
+	* [models/core/schema.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/schema.yml)
+	* [models/staging/stg_eiadata.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/stg_eiadata.sql)
+	* [models/core/production_states.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/production_states.sql)
+	* [models/core/production_regions.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/production_regions.sql)
+	* [packages.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/packages.yml)
 * Run below commands to execute the transformations:
 	```
 	dbt deps
