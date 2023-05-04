@@ -154,8 +154,8 @@ terraform apply
 
 ### Step 5: Batch processing and transformations using Spark
 
-* We use Spark to create a schema that is used to generate parque files from csv files located on GCS and we save the parque files on the GCS. This ensures that all data that wil go into our datawarehouse wil conform to this schema. This batch processing is orchestrated by a Prefect flow.
-
+* Read more on [how to install Spark](https://spark.apache.org/docs/latest/api/python/getting_started/install.html)
+* We use Spark to create a schema that is used to generate parque files from csv files located on GCS and we save the parque files on the GCS. This ensures that all data that will go into our data warehouse will conform to the schema specified. This batch processing is orchestrated by a Prefect flow.
 
 ### Step 6: Transformations using dbt
 
@@ -163,11 +163,11 @@ terraform apply
 * Select the BigQuery connection and update `service-account.json` file for the authentication. 
 * Under dbt development menu, edit the `dbt-project.yml` to update the `name` and `models`.
 * Add the following:
-	* [macros/get_state_category.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/macros) 
-	* [models/core/schema.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/models/core/schema.yml)
-	* [models/staging/stg_eiadata.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/models/staging/stg_eiadata.sql)
-	* [models/core/production_states.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/models/core/production_states.sql)
-	* [models/core/production_regions.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/models/core/production_regions.sql)
+	* [macros/get_state_category.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/get_state_category.sql) 
+	* [models/core/schema.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/schema.yml)
+	* [models/staging/stg_eiadata.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/stg_eiadata.sql)
+	* [models/core/production_states.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/production_states.sql)
+	* [models/core/production_regions.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/production_regions.sql)
 	* [packages.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/dbt/packages.yml)
 * Run below commands to execute the transformations:
 	```

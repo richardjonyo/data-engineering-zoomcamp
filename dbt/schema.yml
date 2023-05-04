@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+    - name: staging
+      database: dtc-gc
+      schema: staging
+
+      tables:
+        - name: eia_week
+        - name: eia_month
