@@ -182,8 +182,6 @@ terraform apply
 
 The final product for this pipeline was a dashboard built on Google Data Studio. The dashboard has three parts with control filters on year and state that demonstrate the analytics points below. [Link to the dashboard:](https://lookerstudio.google.com/reporting/5a912732-c32f-4857-9931-0af9213e8ffb)
 
-A preview of the dashboard can also be seen below:
-
 ## Future considerations
 
 - Currently the project considers only weekly data, the monthly data could improve the analytics. 
