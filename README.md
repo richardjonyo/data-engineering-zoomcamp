@@ -60,13 +60,13 @@ This project has the goal of answering the following questions among others:
 
 * Dbt models:
 
-    1. [stg_eiadata](./tranformers/models/staging/stg_eiadata.sql): selects a all columns from the  staging table (stg_eiadata) that was loaded into BigQuery, and adds a unique key field.
+    1. [stg_eiadata](./dbt/stg_eiadata.sql): selects a all columns from the  staging table (stg_eiadata) that was loaded into BigQuery, and adds a unique key field. This file is under the staging folder.
 
-    2. [production_states](./tranformers/models/core/production_states.sql): selects all state data from stg_eiadata, partitions it by year . Here, the partitioning makes it more efficient to query data and extract statistics by year. With respect to clustering, borough and state is the main categorical value but for this project we did not cluster the table a sit added no permormance benefit.
-		* The model employs a macro named [*'get_state_category'*](./tranformers/macros/core/get_state_category.sql) to distinguish the states from the regions
+    2. [production_states](./dbt/production_states.sql): selects all state data from stg_eiadata, partitions it by year . Here, the partitioning makes it more efficient to query data and extract statistics by year. With respect to clustering, borough and state is the main categorical value but for this project we did not cluster the table a sit added no permormance benefit. This file is under the core folder.
+		* The model employs a macro named [*'get_state_category'*](./dbt/get_state_category.sql) to distinguish the states from the regions
 	
-	3. [production_regions](./tranformers/models/core/production_regions.sql): selects all regional data from stg_eiadata, partitions it by year . The tables is also partitioned by year and not clustered.
-		* The model employs a macro named [*'get_state_category'*](./tranformers/macros/core/get_state_category.sql) as above.
+	3. [production_regions](./dbt/production_regions.sql): selects all regional data from stg_eiadata, partitions it by year . The tables is also partitioned by year and not clustered. This file is under the core folder.
+		* The model employs a macro named [*'get_state_category'*](./dbt/get_state_category.sql) as above.
 
 ## Partitioning and Clustering:
 
