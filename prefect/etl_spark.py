@@ -1,3 +1,5 @@
+#This ETL runs a Spark Job that fetches the raw CSV files from GCS and saves them as Parquet file on GCS.
+
 import pyspark
 import re
 import pandas as pd
@@ -18,7 +20,7 @@ def etl_parent_flow(period:str):
     """Main ETL Flow for Spark job - creates a schema and load parquet files to GCS """  
     
     credentials_location = 'google/dtc-gc-37b8d03b4e65.json'
-    conf = SparkConf()     .setMaster('local[*]')     .setAppName('eia')     .set("spark.jars", "./lib/gcs-connector-hadoop3-2.2.5.jar")     .set("spark.hadoop.google.cloud.auth.service.account.enable", "true")     .set("spark.hadoop.google.cloud.auth.service.account.json.keyfile", credentials_location)
+    conf = SparkConf().setMaster('local[*]').setAppName('eia').set("spark.jars", "./lib/gcs-connector-hadoop3-2.2.5.jar")     .set("spark.hadoop.google.cloud.auth.service.account.enable", "true")     .set("spark.hadoop.google.cloud.auth.service.account.json.keyfile", credentials_location)
     sc = SparkContext(conf=conf)
 
     hadoop_conf = sc._jsc.hadoopConfiguration()
@@ -27,7 +29,7 @@ def etl_parent_flow(period:str):
     hadoop_conf.set("fs.gs.auth.service.account.json.keyfile", credentials_location)
     hadoop_conf.set("fs.gs.auth.service.account.enable", "true")
 
-    spark = SparkSession.builder     .config(conf=sc.getConf())     .getOrCreate()
+    spark = SparkSession.builder.config(conf=sc.getConf()).getOrCreate()
 
     production_schema = types.StructType([
         types.StructField("state", types.StringType(), True),
@@ -93,6 +95,7 @@ def etl_parent_flow(period:str):
     input_path = f'gs://dtc_data_lake_dtc-gc/data/eia/{period}/*/'
     output_path = f'gs://dtc_data_lake_dtc-gc/pq/eia/{period}/'
 
+    # partition the parquet files 
     df_production = spark.read  .option("header", "true")  .schema(production_schema)  .csv(input_path)
     df_production = df_production.withColumn("year", input_file_name())
     df_production = df_production.withColumn("year", regexp_extract("year", "(\d{4})", 1))

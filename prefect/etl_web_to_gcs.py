@@ -36,7 +36,7 @@ def fetch(dataset_url: str) -> pd.DataFrame:
 def write_local(df: pd.DataFrame, year: str, period: str) -> Path:
     """Write DataFrame out locally"""
     # Create a folder 'data/eia/raw/week' and 'data/eia/raw/month' in the working directory before running this code
-    path = Path(f"data/eia/raw/{period}/{period}prodforecast{year}tot.csv")   
+    path = Path(f"data/raw/{period}/{period}prodforecast{year}tot.csv")   
     print(f"PATH: {path.as_posix()}")
     df = clean(df, year, period)
     df.to_csv(path, index=False)
@@ -81,9 +81,11 @@ def clean(df: pd.DataFrame, year: str, period: str) -> pd.DataFrame:
             
     # Replace all occurrences of (".") with  ("") an empty string
     df = df.replace(r'\.', '', regex=True)  
+       
     # Remove empty columns
     df.dropna(how='all', inplace = True) 
     return df
+
 
 @task()
 def write_to_gcs(path: Path) -> None:
@@ -106,18 +108,21 @@ def etl_web_to_gcs(year, period) -> Path:
          dataset_url = f"https://www.eia.gov/coal/production/weekly/archive/{period}prodforecast{year}tot.xls"
          df = fetch(dataset_url)
          
-    path = write_local(df, year, period)    
+    path = write_local(df, year, period)   
+      
     return path  
     
 @flow(log_prints=True)
 def etl_parent_flow(years: list[int], period: str):
     for year in years:
         path = etl_web_to_gcs(year, period) #period represents either 'week' or 'month'
-        write_to_gcs(path)
+        #write_to_gcs(path)
+       
     
 
 if __name__ == '__main__':
     period = "week" #'week' or 'month'
-    #years = [2023] 
+    #years = [2022] 
     years = [year for year in range(2013, 2001, -1)] 
+    
     etl_parent_flow(years, period)

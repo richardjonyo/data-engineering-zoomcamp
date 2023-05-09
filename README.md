@@ -184,13 +184,15 @@ terraform apply
 * Navigate to [dbt cloud](https://www.getdbt.com/) and create a new project by referring to this repository. Under the project subfolder update `/dbt`
 * Select the BigQuery connection and update `service-account.json` file for the authentication. 
 * Under dbt development menu, edit the `dbt-project.yml` to update the `name` and `models`.
-* Add the following:
-	* [macros/get_state_category.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/get_state_category.sql) 
-	* [models/core/schema.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/schema.yml)
+* Add the following:		
 	* [models/staging/stg_eiadata.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/stg_eiadata.sql)
 	* [models/core/production_states.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/production_states.sql)
 	* [models/core/production_regions.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/production_regions.sql)
+	* [macros/categorize_state.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/categorize_state.sql) 
+	* [seeds/states_lookup.csv](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/states_lookup.csv) 
+	* [seeds/regions_lookup.csv](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/regions_lookup.csv) 
 	* [packages.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/packages.yml)
+	* [models/core/schema.yml](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/schema.yml)
 * Run below commands to execute the transformations:
 	```
 	dbt deps
@@ -206,7 +208,7 @@ The final product for this pipeline was a dashboard built on Google Data Studio.
 
 ## Future considerations
 
-- Currently the project considers only weekly data, the monthly data could improve the analytics. 
+- Currently the project considers only weekly data, the monthly data could improve the analytics by diaplying data summarie by month (Jan, Feb, Mar etc.). 
 - Dockerize the set up
 
 ### Important note
