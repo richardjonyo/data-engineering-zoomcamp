@@ -63,13 +63,15 @@ This project has the goal of answering the following questions among others:
 
     2. [ETL GCS to BigQuery](./prefect/etl_gcs_to_bq.py): fetches data from GCS, transforms the data by adding a 'year' column, and loads the data into BigQuery on the tables *'eia_week'* and *'eia_month'*. The ETL process will execute once to obtain coal production data from the past (2001 up to 2022). Thereafter, it will retrieve monthly data solely for the present year.
 
-* Dbt Models:
+* Dbt Models and Seeds:
 
     1. [stg_eiadata](./dbt/stg_eiadata.sql): selects a all columns from the  staging table (stg_eiadata) that was loaded into BigQuery, and adds a unique key field. This file is located under the *'models/staging'* folder.
 
     2. [production_states](./dbt/production_states.sql): selects all state data from stg_eiadata, partitions it by year . Here, the partitioning makes it more efficient to query data and extract statistics by year. With respect to clustering, borough and state is the main categorical value but for this project we did not cluster the table a sit added no permormance benefit. This model is located under the *'models/core'* folder. The model employs a macro named [*'categorize_state'*](./dbt/categorize_state.sql) to distinguish the states from the regions.
 	
 	3. [production_regions](./dbt/production_regions.sql): selects all regional data from *'stg_eiadata'* and partitions the table by year . The tables is not clustered. This model is located in the *'models/core'* folder in the dbt folder.  The model employs a macro named [*'categorize_state'*](./dbt/categorize_state.sql) as above.
+
+	4. [states_lookup](./dbt/states_lookup.csv) and [regions_lookup](./dbt/regions_lookup.csv): provide dictionary data for the states and regions. They are located in the 'models/seeds' folder in the dbt folder.
 
 ## Partitioning and Clustering:
 
