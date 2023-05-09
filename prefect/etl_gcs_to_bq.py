@@ -56,6 +56,6 @@ def etl_parent_flow(years: list[int], period:str):
 
 if __name__ == '__main__':
     period = "week" #'week' or 'month'
-    years = [2023] 
-    #years = [year for year in range(2023, 2001, -1)]   
+    #years = [2023] 
+    years = [year for year in range(2023, 2001, -1)]   
     etl_parent_flow(years, period)
