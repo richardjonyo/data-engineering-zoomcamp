@@ -60,4 +60,4 @@ select
     annual_average,
     annual_total,
     {{ categorize_state('state') }} as state_category
-from {{ source('staging', 'eia_week') }}
+from {{ source('staging', 'eia_week') }}   
