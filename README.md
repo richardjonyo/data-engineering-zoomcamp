@@ -8,22 +8,20 @@ This data pipeline transforms raw data into data ready for analytics with the in
 ## Datasets
 The dataset has 54 columns - of which 53 are values for each week of year represented as "week 01", "week 02" etc . The following columns are used for the weekly data:
 
-<div align="left">
 | #  | Attribute             |                     Description                                      |
 |:--:|:---------------------:|----------------------------------------------------------------------|
 |  1 | **state**                | A US state that produces coal.                  |
-|  2 | **week 01 - week 53**          | Amount of coal produced in the week of a particular year (in thousand short tons)| 
-</div>
+|  2 | **week 01 - week 53**          | Amount of coal produced in the week of a particular year (in thousand short tons)|
+|  3 | **Total**          | Amount of coal produced in the particular year (in thousand short tons)|  
+
 
 The following columns are used for the monthly data:
 
-<div align="left">
 | #  | Attribute             |                     Description                                      |
 |:--:|:---------------------:|----------------------------------------------------------------------|
 |  1 | **state**                | A US state that produces coal.                  |
 |  2 | **Jan - Dec**          | Amount of coal produced in the month of a particular year (in thousand short tons)| 
-|  3 | **Total**          | The total amount of coal produced in the weeks of a particular year (in thousand short tons)| 
-</div>
+|  3 | **Total**          | The total amount of coal produced in the particular year (in thousand short tons)| 
 
 Dataset Url: https://www.eia.gov/coal/production/weekly/includes/archive.php
 
