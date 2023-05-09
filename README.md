@@ -13,8 +13,8 @@ The dataset has 54 columns - of which 53 are values for each week of year repres
 | #  | Attribute             |                     Description                                      |
 |:--:|:---------------------:|----------------------------------------------------------------------|
 |  1 | **state**                | A US state that produces coal.                  |
-|  2 | **week 1 - week 53**          | Week of the year | 
-|  3 | **year**          | Captures the year when the coal production data estimate | 
+|  2 | **week 1 - week 53**          | Amount of coal produced in the week of a particular year (in thousand short tons)| 
+|  3 | **year**          | The year of the coal production | 
   
 </div>
 
@@ -81,10 +81,10 @@ The final main table (eia_week) is of the format below after transformation:
 |:--:|:---------------------:|----------------------------------------------------------------------|
 |  1 | **eia_id**                | A unique id that identies the record.                  |
 |  2 | **state**                | A US state or region that produces coal.                  |
-|  3 | **week 1 - week 53**          | Amount of coal produced in the week of the year | 
+|  3 | **week 1 - week 53**          | Amount of coal produced in the week (in thousand short tons) | 
 |  4 | **year**          | The year of the coal production | 
-|  5 | **annual_average**          | Annual average tons of coal production | 
-|  6 | **annual_total**          | Total average tons of coal production | 
+|  5 | **annual_average**          | Annual average tons of coal production (in thousand short tons) | 
+|  6 | **annual_total**          | Total average tons of coal production (in thousand short tons) | 
   
 The other two final tables (production_states and production_regions) are of the format below:
   
@@ -92,8 +92,8 @@ The other two final tables (production_states and production_regions) are of the
 |:--:|:---------------------:|----------------------------------------------------------------------|
 |  1 | **state**                | A US state or region that produces coal.                  |
 |  3 | **year**          | The year of the coal production | 
-|  4 | **annual_average**          | Annual average tons of coal production | 
-|  5 | **annual_total**          | Total average tons of coal production | 
+|  4 | **annual_average**          | Annual average tons of coal production (in thousand short tons) | 
+|  5 | **annual_total**          | Total average tons of coal production (in thousand short tons) | 
 |  6 | **state_category**          | Category of state / region | 
 
 </div>
