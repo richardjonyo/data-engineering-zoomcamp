@@ -48,6 +48,7 @@ This project has the goal of answering the following questions among others:
 * SQL: Data Analysis & Exploration
 * Prefect (Cloud): Pipeline Orchestration
 * DBT (Cloud): Data Transformation
+* Docker: Containerization
 * Spark: Distributed Processing 
 * Pandas: Data Analysis & Exploration
 
