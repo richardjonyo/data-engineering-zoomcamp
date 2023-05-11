@@ -234,7 +234,6 @@ The final product for this pipeline was a dashboard built on Google Data Studio.
 ## Future considerations
 
 - Currently the project considers only weekly data, the monthly data could improve the analytics by displaying data summarized by month (Jan, Feb, Mar etc.). 
-- Dockerize the set up
 
 ### Important note
 Once you're done evaluating this project, stop and remove any cloud resources. Use Terraform to destroy your buckets and datasets with the command below:
