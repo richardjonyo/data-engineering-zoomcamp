@@ -7,7 +7,7 @@ import pyarrow.parquet as pq
 from prefect import flow, task
 from prefect_gcp.cloud_storage import GcsBucket
 from prefect_gcp import GcpCredentials
-   
+
     
 @task(log_prints=True, retries=2)
 def fetch(dataset_url: str) -> pd.DataFrame:
@@ -35,7 +35,7 @@ def fetch(dataset_url: str) -> pd.DataFrame:
 @task()
 def write_local(df: pd.DataFrame, year: str, period: str) -> Path:
     """Write DataFrame out locally"""
-    # Create a folder 'data/eia/raw/week' and 'data/eia/raw/month' in the working directory before running this code
+    # Create a folder 'data/raw/week' and 'data/raw/month' in the working directory before running this code
     path = Path(f"data/raw/{period}/{period}prodforecast{year}tot.csv")   
     print(f"PATH: {path.as_posix()}")
     df = clean(df, year, period)
@@ -91,12 +91,12 @@ def clean(df: pd.DataFrame, year: str, period: str) -> pd.DataFrame:
 def write_to_gcs(path: Path) -> None:
     """Upload local file to GCS"""
     gcs_block = GcsBucket.load("zoom-gcs")
-    gcs_block.upload_from_path(from_path=path, to_path=path.as_posix()) # Using as_posix() to convert the slashes to forward
+    gcs_block.upload_from_path(from_path=path, to_path=path) 
     return
 
 
 @flow(log_prints=True)
-def etl_web_to_gcs(year, period) -> Path:
+def etl_web_to_gcs(year, period) -> pd.DataFrame:
     """The Main ETL function"""    
     dataset_url = f"https://www.eia.gov/coal/production/weekly/current_year/{period}prodforecast{year}tot.xls"
     print(f"URL: {dataset_url}")
@@ -108,21 +108,19 @@ def etl_web_to_gcs(year, period) -> Path:
          dataset_url = f"https://www.eia.gov/coal/production/weekly/archive/{period}prodforecast{year}tot.xls"
          df = fetch(dataset_url)
          
-    path = write_local(df, year, period)   
-      
-    return path  
+    return df  
     
 @flow(log_prints=True)
-def etl_parent_flow(years: list[int], period: str):
+def etl_parent_flow(years: list[int], period: str, writelocal: bool):
     for year in years:
-        path = etl_web_to_gcs(year, period) #period represents either 'week' or 'month'
-        #write_to_gcs(path)
+        df = etl_web_to_gcs(year, period) #period represents either 'week' or 'month'
+        path = write_local(df, year, period) 
+        write_to_gcs(path.as_posix())
        
-    
 
 if __name__ == '__main__':
     period = "week" #'week' or 'month'
-    #years = [2022] 
-    years = [year for year in range(2013, 2001, -1)] 
-    
-    etl_parent_flow(years, period)
+    years = [2022] 
+    #years = [year for year in range(2013, 2001, -1)]
+    writelocal = False    
+    etl_parent_flow(years, period, writelocal)

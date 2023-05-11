@@ -187,6 +187,18 @@ terraform apply
    - Alternatively, from Prefect dashboard, go to Deployment and a start a quick run
    - The flows *'docker-eia-pcs-flow', docker-eia-spark-flow, and docker-eia-bq-flow* will be created.  Edit and schedule them to run once every week. For the parameter 'year' enter an array of years [2001, 2002, 2003 till 2023), for the parameter 'period' enter either 'week' or 'month'. Currently only week is applicable.
 
+### Deploy image to Docker Hub
+- Create a Dockerfile in your root folder by runnning the command below:
+ ```
+touch Dockerfile
+ ```
+- Build and push the image to Docker Hub using the commands below:
+ ```
+docker image build -t <dockerhub username>/prefect:<image-name> .
+docker image push <dockerhub username>/prefect:<image-name>
+ ```
+- Our flows will be copied to the path *'/opt/prefect/flows/'* and our data will be copied to the path *"/opt/prefect/data/'* on Docker Hub
+
 ### Step 5: Batch processing and transformations using Spark
 
 * Read more on [how to install Spark](https://spark.apache.org/docs/latest/api/python/getting_started/install.html)
