@@ -120,7 +120,7 @@ pip install pyspark (required to process larger datasets in a distributed cluste
     
     Using dbt we are able to form four (4) new tables/views on BigQuery named follows: *'stg_eiadata'*, *'production_states'*, *'production_regions'*, and *'states_lookup'*. The models and seeds developed are located under the *'models/staging'*, *'models/core'* and the *'models/seeds'* folders. Three dbt models and two seeds have been developed to accomplish this task as follows:
 
-    1. [stg_eiadata](./dbt/staging/stg_eiadata.sql): selects a all columns from the  staging table (stg_eiadata) that was loaded into BigQuery, and adds a unique key field. 
+    1. [stg_eiadata](./dbt/models/staging/stg_eiadata.sql): selects a all columns from the  staging table (stg_eiadata) that was loaded into BigQuery, and adds a unique key field. 
         ```
         {{ config(materialized="view") }}
         select
@@ -139,7 +139,7 @@ pip install pyspark (required to process larger datasets in a distributed cluste
         ```
         ![image](./images/lineage_graph_stg_eiadata.jpg)
 
-    2. [production_states](./dbt/core/production_states.sql): selects all state data from the view *'stg_eiadata'*, partitions it by year and forms a new denormalized view *'production_states'*. The partitioning makes it more efficient to query data and extract statistics by *'year'*. With respect to clustering, *'state'* is the main categorical value but for this project we did not cluster the table as it adds no permormance benefit. This model is located under the *'models/core'* folder. The model employs a macro named [*'categorize_state'*](./dbt/macros/categorize_state.sql) to distinguish the states from the regions.
+    2. [production_states](./dbt/models/core/production_states.sql): selects all state data from the view *'stg_eiadata'*, partitions it by year and forms a new denormalized view *'production_states'*. The partitioning makes it more efficient to query data and extract statistics by *'year'*. With respect to clustering, *'state'* is the main categorical value but for this project we did not cluster the table as it adds no permormance benefit. This model is located under the *'models/core'* folder. The model employs a macro named [*'categorize_state'*](./dbt/macros/categorize_state.sql) to distinguish the states from the regions.
 
         ```
             {{
@@ -172,7 +172,7 @@ pip install pyspark (required to process larger datasets in a distributed cluste
         ```
         ![image](./images/lineage_graph_production_states.jpg)
 	
-	3. [production_regions](./dbt/core/production_regions.sql): selects all regional data from *'stg_eiadata'* and partitions the table by year . The tables is not clustered. This model is located in the *'models/core'* folder in the dbt folder.  The model employs a macro named [*'categorize_state'*](./dbt/macros/categorize_state.sql) as above.
+	3. [production_regions](./dbt/models/core/production_regions.sql): selects all regional data from *'stg_eiadata'* and partitions the table by year . The tables is not clustered. This model is located in the *'models/core'* folder in the dbt folder.  The model employs a macro named [*'categorize_state'*](./dbt/macros/categorize_state.sql) as above.
 
         ```
             {{
@@ -195,7 +195,7 @@ pip install pyspark (required to process larger datasets in a distributed cluste
             where state_category = 'Region'
         ```
         ![image](./images/lineage_graph_production_regions.jpg)
-	4. [states_lookup](./dbt/seeds/states_lookup.csv) and [regions_lookup](./dbt/seeds/regions_lookup.csv): provide dictionary data for the states and regions. They are located in the 'models/seeds' folder in the dbt folder.
+	4. [states_lookup](./dbt/seeds/states_lookup.csv) and [regions_lookup](./dbt/seeds/regions_lookup.csv): provide dictionary data for the states and regions. They are located in the 'seeds' folder in the dbt folder.
         ![image](./images/lineage_graph_states_lookup.jpg)
         ![image](./images/lineage_graph_regions_lookup.jpg)
 
