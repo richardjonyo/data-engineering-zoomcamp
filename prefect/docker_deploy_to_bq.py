@@ -1,6 +1,6 @@
 from prefect.deployments import Deployment
 from etl_gcs_to_bq import etl_parent_flow
-from prefect.infrastructure.docker import DockerContainer
+from prefect.infrastructure.container import DockerContainer
 
 docker_block = DockerContainer.load("zoomproject-docker")
 

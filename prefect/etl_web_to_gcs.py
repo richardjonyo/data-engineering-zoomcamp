@@ -3,10 +3,12 @@ import pandas as pd
 import pyarrow as pa
 import numpy as np
 import datetime
+import os
 import pyarrow.parquet as pq
 from prefect import flow, task
 from prefect_gcp.cloud_storage import GcsBucket
 from prefect_gcp import GcpCredentials
+from os import path
 
     
 @task(log_prints=True, retries=2)
@@ -32,15 +34,26 @@ def fetch(dataset_url: str) -> pd.DataFrame:
         return None 
     return df
 
-@task()
+def check_file_exists(folder_path: str, file_name: str) -> bool:    
+    file_path = os.path.join(folder_path, file_name)
+    return os.path.exists(file_path)
+
+@task(log_prints=True, retries=2)
 def write_local(df: pd.DataFrame, year: str, period: str) -> Path:
     """Write DataFrame out locally"""
-    # Create a folder 'data/raw/week' and 'data/raw/month' in the working directory before running this code
-    path = Path(f"data/raw/{period}/{period}prodforecast{year}tot.csv")   
-    print(f"PATH: {path.as_posix()}")
+    # Create a folder 'data/raw/week' and 'data/raw/month' in the working directory before running this code    
+    folder_path = "data/pq/week"
+    Path(folder_path).mkdir(parents=True, exist_ok=True)  # Create the folder if it doesn't exist
+
+    #file_name = f"{period}prodforecast{year}tot.csv"
+    file_name = f"{period}prodforecast{year}tot.parquet"
+    file_path = Path(folder_path) / file_name
+    print(f"PATH: {file_path.as_posix()}")
     df = clean(df, year, period)
-    df.to_csv(path, index=False)
-    return path
+    #df.to_csv(file_path, index=False) 
+    df.to_parquet(file_path, compression="gzip")
+
+    return file_path
 
 def clean(df: pd.DataFrame, year: str, period: str) -> pd.DataFrame:
     current_year = datetime.date.today().year
@@ -54,7 +67,6 @@ def clean(df: pd.DataFrame, year: str, period: str) -> pd.DataFrame:
             df.columns = cols
         else:
             # Delete the first row for the rest of the files
-            #df = df.dropna(subset=[df.columns[0]])
             df = df.drop(0)
             column_names = {}
             for i, col in enumerate(df.columns[1:], start=1):
@@ -87,7 +99,7 @@ def clean(df: pd.DataFrame, year: str, period: str) -> pd.DataFrame:
     return df
 
 
-@task()
+@task(log_prints=True)
 def write_to_gcs(path: Path) -> None:
     """Upload local file to GCS"""
     gcs_block = GcsBucket.load("zoom-gcs")
@@ -97,30 +109,38 @@ def write_to_gcs(path: Path) -> None:
 
 @flow(log_prints=True)
 def etl_web_to_gcs(year, period) -> pd.DataFrame:
-    """The Main ETL function"""    
-    dataset_url = f"https://www.eia.gov/coal/production/weekly/current_year/{period}prodforecast{year}tot.xls"
-    print(f"URL: {dataset_url}")
-    df = fetch(dataset_url)
-    
-    # If dataframe is empty use the archive url
-    if df is None:
-         print(f"Dataset prodforecast{year}tot.xls is empty")
-         dataset_url = f"https://www.eia.gov/coal/production/weekly/archive/{period}prodforecast{year}tot.xls"
-         df = fetch(dataset_url)
+    """The Main ETL function""" 
+    data_file =  f"{period}prodforecast{year}tot.csv"
+
+    if(check_file_exists("data/raw/week", data_file)):
+        #process local file
+        print(f"processing local file - {data_file}")
+        df = pd.read_csv(f"data/raw/week/{data_file}")
+    else: 
+        dataset_url = f"https://www.eia.gov/coal/production/weekly/current_year/{data_file}"
+        print(f"processing URL: {dataset_url}")
+        df = fetch(dataset_url)
+        
+        # If dataframe is empty use the archive url
+        if df is None:
+            print(f"Dataset prodforecast{year}tot.xls is empty")
+            dataset_url = f"https://www.eia.gov/coal/production/weekly/archive/{data_file}"
+            print(f"processing archive URL: {dataset_url}")
+            df = fetch(dataset_url)
          
     return df  
     
 @flow(log_prints=True)
-def etl_parent_flow(years: list[int], period: str, writelocal: bool):
+def etl_parent_flow(years: list[int], period: str):
     for year in years:
         df = etl_web_to_gcs(year, period) #period represents either 'week' or 'month'
         path = write_local(df, year, period) 
         write_to_gcs(path.as_posix())
+        
        
 
 if __name__ == '__main__':
     period = "week" #'week' or 'month'
-    years = [2022] 
-    #years = [year for year in range(2013, 2001, -1)]
-    writelocal = False    
-    etl_parent_flow(years, period, writelocal)
+    years = [2023] 
+    #years = [year for year in range(2022, 2002, -1)]  
+    etl_parent_flow(years, period)

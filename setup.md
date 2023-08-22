@@ -1,7 +1,7 @@
 
 # Steps to Reproduce this Pipeline
 
-For reproducibility, clone this repo, have Docker, Python (at least 3.9), Git and Terraform installed.
+For reproducibility, clone this repo, have Docker, Python (version 3.9 or above), Git and Terraform installed.
 
 Other tools and accounts required include a Google Cloud account, Prefect Cloud free account, Docker Hub, and DBT Cloud developer account.
 
@@ -24,16 +24,16 @@ Other tools and accounts required include a Google Cloud account, Prefect Cloud 
 - [Install Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 - Change default variables `project`, `region`, `BQ_DATASET` in `variables.tf` (the file contains descriptions explaining these variables)
 - Run the following commands from terraform directory on bash:
-```shell
-# Initialize state file (.tfstate)
-terraform init
+	```shell
+	# Initialize state file (.tfstate)
+	terraform init
 
-# Check changes to new infra plan
-terraform plan
+	# Check changes to new infra plan
+	terraform plan
 
-# Create new infra
-terraform apply
-```
+	# Create new infra
+	terraform apply
+	```
 - Confirm in GCP console that the infrastructure was correctly created.
 
 ### Step 4: Creation of Conda environment and Orchestration using Prefect flows.
@@ -43,9 +43,9 @@ terraform apply
 - Create a Prefect Cloud accout and login. More information about Prefect Cloud is [here](https://docs.prefect.io/latest/cloud/cloud-quickstart/).
 
 - Run the command below to login into Prefect cloud.
-```
- prefect cloud login -k [api_key] 
- ```
+	```
+	prefect cloud login -k [api_key] 
+	```
 - Register Prefect blocks. From Prefect dashboard navigate to blocks menu --> add `GCS Bucket` and provide below inputs.
 	* Block name : `<your-GCS-bucket-block-name>`
 	* Bucket name: `<your-bucket-name-created-by-terraform>`
@@ -65,31 +65,42 @@ terraform apply
 		```    
 - Run Prefect deployment:
 
-   - Run the commands:
+   - Run the following commands from prefect folder:
    ```
-	python prefect/docker_deploy_to_gcs.py
-	python prefect/docker_deploy_spark.py
-    python prefect/docker_deploy_to_bq.py
+	python docker_deploy_to_gcs.py
+	python docker_deploy_spark.py
+    python docker_deploy_to_bq.py
+   ```
+- Create a deployments in Prefect
+ 	- Run the commands:
+   ```
+	prefect deployment build ./prefect/etl_web_to_gcs.py:etl_parent_flow -n "EIA-web-to-gcs-ETL" --param year=2023 --param period=week
+	prefect deployment build ./prefect/etl_spark.py:etl_parent_flow -n "EIA-spark-ETL" --param period=week
    ```
    - Alternatively, from Prefect dashboard, go to Deployment and a start a quick run
-   - The flows *'docker-eia-pcs-flow', docker-eia-spark-flow, and docker-eia-bq-flow* will be created.  Edit and schedule them to run once every week. For the parameter 'year' enter an array of years [2001, 2002, 2003 till 2023), for the parameter 'period' enter either 'week' or 'month'. Currently only week is applicable.
+   - The flows *'docker-eia-pcs-flow', docker-eia-spark-flow, and docker-eia-bq-flow* will be created.  Edit and schedule them to run once every week. For the parameter 'year' enter an array of years [2002, 2003 till curreny year), for the parameter 'period' enter either 'week' or 'month'. Currently only week is applicable.
+
+   - Run the agent using the command below (Note: if the agent is not running the flow will remain in  *'late'* status): 
+   ```
+		prefect agent start  --work-queue "default"
+	```
 
 ### Deploy image to Docker Hub
 - Create a Dockerfile in your root folder by runnning the command below:
- ```
-touch Dockerfile
- ```
+	```
+	touch Dockerfile
+	```
 - Build and push the image to Docker Hub using the commands below:
- ```
-docker image build -t <dockerhub username>/prefect:<image-name> .
-docker image push <dockerhub username>/prefect:<image-name>
- ```
-- Our flows will be copied to the path *'/opt/prefect/flows/'* and our data will be copied to the path *"/opt/prefect/data/'* on Docker Hub
+	```
+	docker image build -t <dockerhub username>/prefect:<image-name> .
+	docker image push <dockerhub username>/prefect:<image-name>
+	```
+- Our flows will be copied to the path *'/opt/prefect/'* and our data will be copied to the path *"/opt/data/'* on Docker Hub
 
-### Step 5: Batch processing and transformations using Spark
+### Step 5: Batch processing and transformations using Spark (PySpark)
 
 * Read more on [how to install Spark](https://spark.apache.org/docs/latest/api/python/getting_started/install.html)
-* We use Spark to create a schema that is used to generate parquet files from csv files located on GCS and we save the final parquet files on the GCS. The schema ensures that all data that will go into our data warehouse will conform to the schema specified. This batch processing is orchestrated by a Prefect flow mentioned earlier.
+* In this pipeline we use Spark (PySpark) to create a schema that is used to generate parquet files located on GCS and we save the final parquet files on the GCS. The schema ensures that all data that will go into our data warehouse will conform to the schema specified. This batch processing is orchestrated by a Prefect flow mentioned earlier.
 
 ### Step 6: Transformations using dbt
 
@@ -100,6 +111,8 @@ docker image push <dockerhub username>/prefect:<image-name>
 	* [models/staging/stg_eiadata.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/stg_eiadata.sql)
 	* [models/core/production_states.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/production_states.sql)
 	* [models/core/production_regions.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/production_regions.sql)
+	* [models/core/dim_production_states.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/dim_production_states.sql)
+	* [models/core/dim_production_regions.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/dim_production_regions.sql)
 	* [macros/categorize_state.sql](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/categorize_state.sql) 
 	* [seeds/states_lookup.csv](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/states_lookup.csv) 
 	* [seeds/regions_lookup.csv](https://github.com/richardjonyo/data-engineering-zoomcamp/blob/main/dbt/regions_lookup.csv) 

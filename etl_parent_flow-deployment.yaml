@@ -1,13 +1,15 @@
 ###
 ### A complete description of a Prefect Deployment for flow 'etl-parent-flow'
 ###
-name: EIA-web-to-gcs-ETL
-description: null
-version: e5c92bd03e4b48262c2b5d0348d31541
+name: EIA-spark-ETL
+description: 'Main ETL Flow for Spark job - creates a schema and load parquet files
+  to GCS '
+version: 96a99c574c54aae4cc9ce481d3c94966
 # The work queue that will handle this deployment's runs
 work_queue_name: default
 tags: []
-parameters: {}
+parameters:
+  period: week
 schedule: null
 infra_overrides: {}
 infrastructure:
@@ -28,27 +30,15 @@ flow_name: etl-parent-flow
 manifest_path: null
 storage: null
 path: C:\Bobo\data-engineering\week_7_project
-entrypoint: prefect\etl_web_to_gcs.py:etl_parent_flow
+entrypoint: prefect\etl_spark.py:etl_parent_flow
 parameter_openapi_schema:
   title: Parameters
   type: object
   properties:
-    years:
-      title: years
-      position: 0
-      type: array
-      items:
-        type: integer
     period:
       title: period
-      position: 1
+      position: 0
       type: string
-    writelocal:
-      title: writelocal
-      position: 2
-      type: boolean
   required:
-  - years
   - period
-  - writelocal
   definitions: null
