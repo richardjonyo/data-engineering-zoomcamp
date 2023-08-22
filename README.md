@@ -1,7 +1,7 @@
 # Data Engineering Zoomcamp Final Project
 
 ## Overview
-This data pipeline project uses the [U.S. Energy Information Administration (EIA)'s](https://www.eia.gov/) weekly original estimates of state level coal production to generate coal production analytics acquired from the Mine Safety and Health Administration (MSHA). The pipeline focuses on using the weekly coal production datasets, which are publicly available in XLS format on the EIA website. The datasets are part of the weekly and monthly Coal Production dataset, which contains information on world energy statistics and is comprised of 22 CSV files.
+This data pipeline project uses the [U.S. Energy Information Administration (EIA)'s](https://www.eia.gov/) weekly original estimates of state level coal production to generate coal production analytics acquired from the Mine Safety and Health Administration (MSHA). The pipeline focuses on using the weekly coal production datasets, which are publicly available in XLS format on the EIA website. The datasets are part of the weekly and monthly Coal Production dataset, which contains information on world energy statistics and is comprised of 22 excel files.
 
 This data pipeline transforms raw data into data ready for analytics with the intention of keeping data flowing to provide insights that lead to informed decisions. The goal of this project is to apply everything learned in the Data Engineering Zoomcamp course and build an end-to-end data pipeline.
 
@@ -9,7 +9,7 @@ This data pipeline transforms raw data into data ready for analytics with the in
 The dataset has 54 columns - of which 53 are values for each week of year represented as "week 01", "week 02" etc . The following columns are used for the weekly data:
 
 | #  | Attribute             |                     Description                                      |
-|:--:|:---------------------:|----------------------------------------------------------------------|
+|:--:|---------------------:|----------------------------------------------------------------------|
 |  1 | **state**                | A US state that produces coal.                  |
 |  2 | **week 01 - week 53**          | Amount of coal produced in the week of a particular year (in thousand short tons)|
 |  3 | **Total**          | Amount of coal produced in the particular year (in thousand short tons)|  
@@ -18,7 +18,7 @@ The dataset has 54 columns - of which 53 are values for each week of year repres
 The following columns are used for the monthly data:
 
 | #  | Attribute             |                     Description                                      |
-|:--:|:---------------------:|----------------------------------------------------------------------|
+|:--:|---------------------:|----------------------------------------------------------------------|
 |  1 | **state**                | A US state that produces coal.                  |
 |  2 | **Jan - Dec**          | Amount of coal produced in the month of a particular year (in thousand short tons)| 
 |  3 | **Total**          | The total amount of coal produced in the particular year (in thousand short tons)| 
@@ -208,7 +208,7 @@ The final main table (eia_week) is of the format below after transformation:
 <div align="left">
   
 | #  | Attribute             |                     Description                                      |
-|:--:|:---------------------:|----------------------------------------------------------------------|
+|:--:|---------------------:|:----------------------------------------------------------------------|
 |  1 | **eia_id**                | A unique id that identies the record.                  |
 |  2 | **state**                | A US state or region that produces coal.                  |
 |  3 | **week_1 - week_53**          | Amount of coal produced in the week (in thousand short tons) | 
@@ -221,7 +221,7 @@ The final main table (eia_week) is of the format below after transformation:
 The other two final tables (production_states and production_regions) are of the format below:
   
 | #  | Attribute             |                     Description                                      |
-|:--:|:---------------------:|----------------------------------------------------------------------|
+|:--:|---------------------:|----------------------------------------------------------------------|
 |  1 | **state_code**  | A unique identifierl or a state or region.                  |
 |  2 | **state**                | A US state or region that produces coal.                  |
 |  3 | **year**          | The year of the coal production | 
@@ -258,6 +258,7 @@ Here is a screenshot for the dashboard generated.
 - Improve the pipeline by connecting the  free and open API provided by EIA as a data source - https://www.eia.gov/opendata/
 - Add unit tests
 - Add CI/CD pipeline
+- Add filters to final visualization
 
 ## Resources
 - [Coal terminologies](https://www.eia.gov/tools/glossary/index.php?id=coal)
