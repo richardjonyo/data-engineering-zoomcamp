@@ -258,7 +258,8 @@ Here is a screenshot for the dashboard generated.
 - Improve the pipeline by connecting the  free and open API provided by EIA as a data source - https://www.eia.gov/opendata/
 - Add unit tests
 - Add CI/CD pipeline
-- Add filters to final visualization
+- Create outbound webhooks to send events (notifications) 
+- Add filters to the final visualization
 
 ## Resources
 - [Coal terminologies](https://www.eia.gov/tools/glossary/index.php?id=coal)

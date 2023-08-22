@@ -1,7 +1,6 @@
-{{ config(materialized='table') }}
 {{
  config(
-   materialized = 'table',
+   materialized = 'view',
    partition_by = {
      'field': 'year', 
      'data_type': 'integer'
