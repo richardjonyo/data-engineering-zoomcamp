@@ -256,6 +256,8 @@ Here is a screenshot for the dashboard generated.
 - Currently the project considers only weekly data, the monthly data could improve the analytics by displaying data summarized by month (Jan, Feb, Mar etc.). 
 - Include data from actual estimates which are usually revised with actual data once it is available.
 - Improve the pipeline by connecting the  free and open API provided by EIA as a data source - https://www.eia.gov/opendata/
+- Add unit tests
+- Add CI/CD pipeline
 
 ## Resources
 - [Coal terminologies](https://www.eia.gov/tools/glossary/index.php?id=coal)
